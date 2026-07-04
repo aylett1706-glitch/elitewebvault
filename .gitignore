@@ -1,0 +1,14 @@
+# Node / Build files
+node_modules/
+dist/
+build/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# IDE / OS files
+.DS_Store
+.vscode/
+*.log
