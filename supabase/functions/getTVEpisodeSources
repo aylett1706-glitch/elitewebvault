@@ -1,0 +1,161 @@
+const TMDB_TOKEN = Deno.env.get("TMDB_READ_ACCESS_TOKEN");
+const BASE_URL = "https://api.themoviedb.org/3";
+
+const headers = {
+  "Authorization": `Bearer ${TMDB_TOKEN}`,
+  "Content-Type": "application/json"
+};
+
+async function fetchTMDB(path) {
+  const res = await fetch(`${BASE_URL}${path}`, { headers });
+  return res.json();
+}
+
+// Ranked embed sources — ordered by quality/reliability with minimal ads
+// Sources marked with lower ad scores are preferred
+function getEmbedSources(tmdbId, imdbId, season, episode) {
+  const s = season;
+  const e = episode;
+  const sources = [];
+
+  const addEnglishSourcePack = (id) => {
+    if (!id) return;
+    const path = `${id}/${s}/${e}`;
+    const query = `?tmdb=${id}&season=${s}&episode=${e}`;
+    sources.push({ name: 'V2', url: `https://vidsrc.vip/embed/tv/${path}`, tier: 1, language: 'en' });
+    sources.push({ name: 'Premium', url: `https://vidsrc.vip/embed/tv${query}`, tier: 1, language: 'en' });
+    sources.push({ name: '4K', url: `https://vidsrc.net/embed/tv/${path}`, tier: 1, language: 'en' });
+    sources.push({ name: 'Max', url: `https://vidsrc.dev/embed/tv/${path}`, tier: 1, language: 'en' });
+    sources.push({ name: 'Vidfast', url: `https://vidfast.pro/tv/${path}`, tier: 1, language: 'en' });
+    sources.push({ name: 'Vidpro', url: `https://vidsrc.pro/embed/tv/${path}`, tier: 1, language: 'en' });
+    sources.push({ name: 'Peachify', url: `https://player.peachify.net/tv/${path}`, tier: 2, language: 'en' });
+    sources.push({ name: 'Atlas', url: `https://vidsrc.to/embed/tv/${path}`, tier: 2, language: 'en' });
+    sources.push({ name: 'Vidsrc', url: `https://vidsrc.me/embed/tv${query}`, tier: 2, language: 'en' });
+    sources.push({ name: '2Embed', url: `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`, tier: 2, language: 'en' });
+    sources.push({ name: 'Cinemaos', url: `https://cinemaos.live/tv/${path}`, tier: 2, language: 'en' });
+    sources.push({ name: 'Vidnest', url: `https://vidnest.fun/tv/${path}`, tier: 2, language: 'en' });
+    sources.push({ name: 'Tongo', url: `https://tongo.movie/tv/${path}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Echo', url: `https://vidsrc.xyz/embed/tv${query}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Drive', url: `https://drive.vidsrc.dev/tv/${path}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Bravo', url: `https://embed.su/embed/tv/${path}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Vidking', url: `https://vidking.net/tv/${path}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Rip', url: `https://movie-web.app/media/tmdb-tv-${id}-${s}-${e}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Spencer', url: `https://spencerdevs.xyz/tv/${path}`, tier: 3, language: 'en' });
+    sources.push({ name: 'Lima', url: `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`, tier: 3, language: 'en' });
+    sources.push({ name: '111', url: `https://111movies.com/tv/${path}`, tier: 3, language: 'en' });
+  };
+
+  if (tmdbId) {
+    addEnglishSourcePack(tmdbId);
+    // Tier 1: proven reliable
+    sources.push({ name: 'Vidsrc.to', url: `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Embed.su', url: `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.me', url: `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.pro', url: `https://vidsrc.pro/embed/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.xyz', url: `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`, tier: 1 });
+    sources.push({ name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`, tier: 1 });
+    sources.push({ name: 'VidLink', url: `https://vidlink.pro/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'VidFast', url: `https://vidfast.pro/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.cc', url: `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.in', url: `https://vidsrc.in/embed/tv/${tmdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.icu', url: `https://vidsrc.icu/embed/tv/${tmdbId}/${s}/${e}`, tier: 2 });
+    sources.push({ name: 'VidSrc.pm', url: `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`, tier: 2 });
+    // Tier 2
+    sources.push({ name: 'AutoEmbed', url: `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`, tier: 2 });
+    sources.push({ name: 'SmashyStream', url: `https://player.smashy.stream/tv/${tmdbId}?s=${s}&e=${e}`, tier: 2 });
+    sources.push({ name: 'MoviesAPI', url: `https://moviesapi.club/tv/${tmdbId}-${s}-${e}`, tier: 2 });
+    sources.push({ name: '2Embed', url: `https://www.2embed.cc/embedtv/${tmdbId}&s=${s}&e=${e}`, tier: 2 });
+    sources.push({ name: 'MultiEmbed', url: `https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`, tier: 2 });
+  }
+
+  if (imdbId) {
+    sources.push({ name: 'Vidsrc (IMDB)', url: `https://vidsrc.to/embed/tv/${imdbId}/${s}/${e}`, tier: 1 });
+    sources.push({ name: 'Vidsrc.me (IMDB)', url: `https://vidsrc.me/embed/tv?imdb=${imdbId}&season=${s}&episode=${e}`, tier: 1 });
+  }
+
+  const reliabilityRank = {
+    'VidFast': 1,
+    'VidLink': 1,
+    'Vidsrc.to': 2,
+    'Vidsrc.me': 2,
+    'Vidsrc (IMDB)': 2,
+    'Vidsrc.me (IMDB)': 2,
+    'Embed.su': 3,
+    'Vidsrc.pro': 3,
+    'Vidsrc.cc': 4,
+    'Vidsrc.in': 4,
+    'Vidsrc.icu': 5,
+    'VidSrc.pm': 5,
+    'SuperEmbed': 6,
+    'AutoEmbed': 6,
+    'SmashyStream': 6,
+    'MoviesAPI': 7,
+    '2Embed': 8,
+    'MultiEmbed': 9,
+  };
+
+  const seen = new Set();
+
+  return sources
+    .map(source => ({
+      ...source,
+      language: source.language || 'en',
+      watermarkRisk: ['SuperEmbed', 'MultiEmbed', '2Embed', 'MoviesAPI', 'SmashyStream', 'Lima'].includes(source.name) ? 'higher' : 'lower'
+    }))
+    .filter(source => {
+      if (!source.url || seen.has(source.url)) return false;
+      seen.add(source.url);
+      return true;
+    })
+    .sort((a, b) => (reliabilityRank[a.name] || 50) - (reliabilityRank[b.name] || 50));
+}
+
+Deno.serve(async (req) => {
+  const { tmdb_id, imdb_id, season, episode, media_id } = await req.json();
+
+  if (!tmdb_id && !imdb_id) {
+    return Response.json({ error: "tmdb_id or imdb_id required" }, { status: 400 });
+  }
+
+  const s = parseInt(season) || 1;
+  const e = parseInt(episode) || 1;
+
+  // Fetch episode details from TMDB
+  let episodeInfo = null;
+  if (tmdb_id) {
+    const epData = await fetchTMDB(`/tv/${tmdb_id}/season/${s}/episode/${e}`);
+    if (epData && !epData.status_code) {
+      episodeInfo = {
+        title: epData.name || `Episode ${e}`,
+        synopsis: epData.overview || '',
+        air_date: epData.air_date || '',
+        runtime: epData.runtime || null,
+        still_url: epData.still_path ? `https://image.tmdb.org/t/p/w500${epData.still_path}` : null,
+      };
+    }
+  }
+
+  // Get all season episode list
+  let seasonEpisodes = [];
+  if (tmdb_id) {
+    const seasonData = await fetchTMDB(`/tv/${tmdb_id}/season/${s}`);
+    seasonEpisodes = (seasonData.episodes || []).map(ep => ({
+      episode: ep.episode_number,
+      title: ep.name || `Episode ${ep.episode_number}`,
+      synopsis: ep.overview || '',
+      air_date: ep.air_date || '',
+      runtime: ep.runtime || null,
+      still_url: ep.still_path ? `https://image.tmdb.org/t/p/w300${ep.still_path}` : null,
+    }));
+  }
+
+  // Generate ranked embed sources
+  const sources = getEmbedSources(tmdb_id, imdb_id, s, e);
+
+  return Response.json({
+    episode_info: episodeInfo,
+    season_episodes: seasonEpisodes,
+    sources,
+    recommended_source: sources[0] || null,
+  });
+});
