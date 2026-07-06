@@ -1,0 +1,449 @@
+const TMDB_TOKEN = Deno.env.get("TMDB_READ_ACCESS_TOKEN");
+const BASE_URL = "https://api.themoviedb.org/3";
+
+const GENRE_IDS = {
+  Action: { movie: 28, tv: 10759 },
+  Adventure: { movie: 12, tv: 10759 },
+  Animation: { movie: 16, tv: 16 },
+  Comedy: { movie: 35, tv: 35 },
+  Crime: { movie: 80, tv: 80 },
+  Documentary: { movie: 99, tv: 99 },
+  Drama: { movie: 18, tv: 18 },
+  Family: { movie: 10751, tv: 10751 },
+  Fantasy: { movie: 14, tv: 10765 },
+  History: { movie: 36, tv: 10768 },
+  Horror: { movie: 27, tv: 9648 },
+  Mystery: { movie: 9648, tv: 9648 },
+  Romance: { movie: 10749, tv: 10766 },
+  'Science Fiction': { movie: 878, tv: 10765 },
+  Thriller: { movie: 53, tv: 80 },
+  War: { movie: 10752, tv: 10768 },
+  Western: { movie: 37, tv: 37 }
+};
+
+const YOUTUBE_API_KEY = Deno.env.get("YOUTUBE_API_KEY");
+
+const headers = {
+  "Authorization": `Bearer ${TMDB_TOKEN}`,
+  "Content-Type": "application/json"
+};
+
+async function fetchTMDB(path) {
+  const res = await fetch(`${BASE_URL}${path}`, { headers });
+  return res.json();
+}
+
+async function isEmbeddableYouTubeVideo(key) {
+  if (!YOUTUBE_API_KEY || !key) return true;
+  const url = `https://www.googleapis.com/youtube/v3/videos?part=status&id=${key}&key=${YOUTUBE_API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.items?.[0]?.status?.embeddable !== false;
+}
+
+async function pickOfficialTrailer(videos = []) {
+  const trustedChannels = ["imdb", "movieclips", "fandango", "moviefone", "warner bros", "universal pictures", "paramount pictures", "sony pictures", "20th century studios", "marvel entertainment", "disney", "netflix"];
+  const candidates = videos
+    .filter(v => v.site === "YouTube" && ["Trailer", "Teaser", "Clip"].includes(v.type))
+    .sort((a, b) => {
+      const aName = `${a.name || ''} ${a.type || ''}`.toLowerCase();
+      const bName = `${b.name || ''} ${b.type || ''}`.toLowerCase();
+      const trustedScore = Number(trustedChannels.some(channel => bName.includes(channel))) - Number(trustedChannels.some(channel => aName.includes(channel)));
+      if (trustedScore) return trustedScore;
+      const officialScore = Number(Boolean(b.official)) - Number(Boolean(a.official));
+      if (officialScore) return officialScore;
+      const trailerScore = Number(b.type === "Trailer") - Number(a.type === "Trailer");
+      if (trailerScore) return trailerScore;
+      return new Date(b.published_at || 0) - new Date(a.published_at || 0);
+    });
+
+  for (const video of candidates) {
+    if (await isEmbeddableYouTubeVideo(video.key)) return video;
+  }
+
+  return null;
+}
+
+function mapMovie(item) {
+  return {
+    title: item.title,
+    type: "movie",
+    year: item.release_date ? parseInt(item.release_date.slice(0, 4)) : null,
+    rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null,
+    imdb_rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null,
+    synopsis: item.overview || "",
+    genres: [],
+    cast: [],
+    director: "",
+    poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    backdrop_url: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "",
+    video_url: "",
+    trailer_url: "",
+    tmdb_id: String(item.id),
+    source_url: `https://www.themoviedb.org/movie/${item.id}`,
+    imdb_id: "",
+    duration_minutes: null,
+    seasons: null,
+  };
+}
+
+function mapTV(item) {
+  return {
+    title: item.name,
+    type: "tv_show",
+    year: item.first_air_date ? parseInt(item.first_air_date.slice(0, 4)) : null,
+    rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null,
+    imdb_rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null,
+    synopsis: item.overview || "",
+    genres: [],
+    cast: [],
+    director: "",
+    poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    backdrop_url: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "",
+    video_url: "",
+    trailer_url: "",
+    tmdb_id: String(item.id),
+    source_url: `https://www.themoviedb.org/tv/${item.id}`,
+    imdb_id: "",
+    duration_minutes: null,
+    seasons: item.number_of_seasons || null,
+  };
+}
+
+function mapTVMaze(result) {
+  const show = result.show || {};
+  return {
+    title: show.name,
+    type: "tv_show",
+    year: show.premiered ? parseInt(show.premiered.slice(0, 4)) : null,
+    rating: show.rating?.average || null,
+    imdb_rating: show.rating?.average || null,
+    synopsis: (show.summary || "").replace(/<[^>]+>/g, ""),
+    genres: show.genres || [],
+    cast: [],
+    director: "",
+    poster_url: show.image?.medium || show.image?.original || "",
+    backdrop_url: show.image?.original || show.image?.medium || "",
+    video_url: "",
+    trailer_url: "",
+    tmdb_id: "",
+    source_url: show.url || `https://www.tvmaze.com/shows/${show.id}`,
+    imdb_id: show.externals?.imdb || "",
+    duration_minutes: show.runtime || null,
+    seasons: null,
+    source_name: "TVMaze"
+  };
+}
+
+function getMovieCertification(releaseDates = []) {
+  const countries = ['AU', 'US', 'GB'];
+  for (const country of countries) {
+    const entry = releaseDates.find(item => item.iso_3166_1 === country);
+    const certification = entry?.release_dates?.find(item => item.certification)?.certification;
+    if (certification) return { content_rating: certification, age_rating_country: country };
+  }
+  return { content_rating: '', age_rating_country: '' };
+}
+
+function getTvCertification(contentRatings = []) {
+  const countries = ['AU', 'US', 'GB'];
+  for (const country of countries) {
+    const rating = contentRatings.find(item => item.iso_3166_1 === country)?.rating;
+    if (rating) return { content_rating: rating, age_rating_country: country };
+  }
+  return { content_rating: '', age_rating_country: '' };
+}
+
+function detectCollection(title = '', detail = {}) {
+  const text = `${title} ${detail.name || ''} ${detail.title || ''}`.toLowerCase();
+  const rules = [
+    ['marvel', 'Marvel'], ['avengers', 'Marvel'], ['spider-man', 'Marvel'], ['spiderman', 'Marvel'], ['x-men', 'Marvel'], ['guardians of the galaxy', 'Marvel'],
+    ['dc', 'DC'], ['batman', 'DC'], ['superman', 'DC'], ['wonder woman', 'DC'], ['justice league', 'DC'], ['aquaman', 'DC'], ['joker', 'DC'],
+    ['descendants', 'Descendants'], ['star wars', 'Star Wars'], ['harry potter', 'Harry Potter'], ['jurassic', 'Jurassic Park'],
+    ['fast', 'Fast & Furious'], ['transformers', 'Transformers'], ['lord of the rings', 'The Lord of the Rings'], ['hobbit', 'The Lord of the Rings'],
+    ['minions', 'Despicable Me'], ['despicable me', 'Despicable Me'], ['toy story', 'Toy Story'], ['frozen', 'Frozen'], ['cars', 'Cars']
+  ];
+  const match = rules.find(([keyword]) => text.includes(keyword));
+  const collectionName = detail.belongs_to_collection?.name || match?.[1] || '';
+  return {
+    collection_name: collectionName,
+    collection_key: collectionName ? collectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '',
+    related_keywords: collectionName ? [collectionName] : []
+  };
+}
+
+const providerAliases = {
+  netflix: 8,
+  'prime video': 119,
+  prime: 119,
+  amazon: 119,
+  disney: 337,
+  'disney+': 337,
+  stan: 21,
+  binge: 385,
+  'apple tv': 350,
+  'apple tv+': 350,
+  paramount: 531,
+  'paramount+': 531,
+  hayu: 223,
+  foxtel: 134,
+  britbox: 151
+};
+
+function detectProviderQuery(query = '') {
+  const lower = query.toLowerCase();
+  return Object.entries(providerAliases).find(([name]) => lower.includes(name));
+}
+
+function getWatchProviders(detail = {}) {
+  const au = detail['watch/providers']?.results?.AU || {};
+  const providers = [...(au.flatrate || []), ...(au.ads || []), ...(au.free || [])];
+  return [...new Set(providers.map(provider => provider.provider_name).filter(Boolean))];
+}
+
+function mapPersonCredit(item, actorName = '') {
+  if (!['movie', 'tv'].includes(item.media_type)) return null;
+  const mapped = item.media_type === 'movie' ? mapMovie(item) : mapTV(item);
+  mapped.actor_match = actorName;
+  mapped.character = item.character || '';
+  mapped.credit_category = item.character?.toLowerCase().includes('voice') ? 'Voice Acting' : 'Acting';
+  mapped.popularity = item.popularity || 0;
+  return mapped;
+}
+
+function normalizeName(value = '') {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function editDistance(a = '', b = '') {
+  const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j += 1) matrix[0][j] = j;
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      matrix[i][j] = a[i - 1] === b[j - 1]
+        ? matrix[i - 1][j - 1]
+        : Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]) + 1;
+    }
+  }
+  return matrix[a.length][b.length];
+}
+
+function scorePersonMatch(person, query) {
+  const normalizedQuery = normalizeName(query);
+  const normalizedName = normalizeName(person.name || '');
+  const queryParts = normalizedQuery.split(' ').filter(Boolean);
+  const nameParts = normalizedName.split(' ').filter(Boolean);
+  const distance = editDistance(normalizedQuery, normalizedName);
+  const allPartsMatch = queryParts.every(part => nameParts.some(namePart => namePart === part || editDistance(part, namePart) <= 1));
+  let score = Number(person.popularity || 0);
+  if (person.known_for_department === 'Acting') score += 1000;
+  if (normalizedName === normalizedQuery) score += 5000;
+  if (allPartsMatch) score += 2500;
+  if (distance <= 2) score += 1500 - distance * 100;
+  return score;
+}
+
+async function searchActorCredits(query, limit = 500, includeProfile = false) {
+  const actorAliases = {
+    'the rock': 'Dwayne Johnson',
+    rock: 'Dwayne Johnson'
+  };
+  const canonicalQuery = actorAliases[normalizeName(query)] || query;
+  const nameParts = normalizeName(canonicalQuery).split(' ').filter(Boolean);
+  const searchTerms = [...new Set([canonicalQuery, query, nameParts.join(' '), nameParts[0], nameParts[nameParts.length - 1]].filter(term => term && term.length >= 2))];
+  const peoplePages = await Promise.all(searchTerms.map(term => fetchTMDB(`/search/person?query=${encodeURIComponent(term)}&include_adult=false&language=en-US&page=1`)));
+  const people = peoplePages
+    .flatMap(page => page.results || [])
+    .filter((person, index, arr) => person?.id && arr.findIndex(other => other.id === person.id) === index);
+  const actor = people.sort((a, b) => scorePersonMatch(b, canonicalQuery) - scorePersonMatch(a, canonicalQuery))[0];
+  if (!actor?.id) return includeProfile ? { actor: null, results: [] } : [];
+
+  const [credits, profile] = await Promise.all([
+    fetchTMDB(`/person/${actor.id}/combined_credits?language=en-US`),
+    includeProfile ? fetchTMDB(`/person/${actor.id}?language=en-US&append_to_response=images,external_ids`) : Promise.resolve(null)
+  ]);
+  const maxResults = Math.max(10, Math.min(Number(limit) || 500, 500));
+  const combined = (credits.cast || [])
+    .map(item => mapPersonCredit(item, actor.name))
+    .filter(Boolean)
+    .filter((item, index, arr) => item.title && arr.findIndex(other => other.tmdb_id === item.tmdb_id && other.type === item.type) === index)
+    .sort((a, b) => (b.year || 0) - (a.year || 0) || (b.popularity || b.rating || 0) - (a.popularity || a.rating || 0))
+    .slice(0, maxResults);
+
+  const enrichCount = Math.min(combined.length, 80);
+  const enriched = await Promise.all(combined.slice(0, enrichCount).map(item => item.tmdb_id ? enrichWithDetails(item) : item));
+  const results = [...enriched, ...combined.slice(enrichCount)];
+  if (!includeProfile) return results;
+
+  const genreCounts = {};
+  results.forEach(item => (item.genres || []).forEach(genre => { genreCounts[genre] = (genreCounts[genre] || 0) + 1; }));
+  const topGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([genre]) => genre);
+  const notableCredits = [...results]
+    .filter(item => item.year && item.year <= new Date().getFullYear() && (item.rating || item.popularity))
+    .sort((a, b) => (b.popularity || 0) - (a.popularity || 0) || (b.rating || 0) - (a.rating || 0));
+  const knownFor = notableCredits.slice(0, 6).map(item => item.title).filter(Boolean);
+  const profileImage = profile?.profile_path ? `https://image.tmdb.org/t/p/w500${profile.profile_path}` : actor.profile_path ? `https://image.tmdb.org/t/p/w500${actor.profile_path}` : '';
+  const banner = notableCredits.find(item => item.backdrop_url)?.backdrop_url || results.find(item => item.backdrop_url)?.backdrop_url || '';
+  const careerSummary = `${profile?.name || actor.name} is known for ${topGenres.slice(0, 3).join(', ') || 'screen'} work across ${results.filter(item => item.type === 'movie').length} movies and ${results.filter(item => item.type === 'tv_show').length} TV appearances, including ${knownFor.slice(0, 3).join(', ') || 'notable performances'}.`;
+
+  return {
+    actor: {
+      name: profile?.name || actor.name,
+      biography: profile?.biography || '',
+      career_summary: careerSummary,
+      acting_style: topGenres.length ? `Often associated with ${topGenres.slice(0, 3).join(', ').toLowerCase()} storytelling, with roles spanning ${knownFor.slice(0, 3).join(', ')}.` : 'Performance style is inferred from the actor’s most visible credits.',
+      industry_impact: `${profile?.name || actor.name}'s catalogue shows broad audience reach through ${knownFor.slice(0, 4).join(', ') || 'multiple major credits'}.`,
+      profile_url: profileImage,
+      banner_url: banner,
+      known_for: knownFor,
+      top_genres: topGenres,
+      birth_date: profile?.birthday || '',
+      birth_place: profile?.place_of_birth || '',
+      popularity: actor.popularity || profile?.popularity || 0,
+      tmdb_id: String(actor.id)
+    },
+    results
+  };
+}
+
+async function enrichWithDetails(item) {
+  const endpoint = item.type === "movie"
+    ? `/movie/${item.tmdb_id}?append_to_response=credits,videos,external_ids,release_dates,watch/providers`
+    : `/tv/${item.tmdb_id}?append_to_response=credits,videos,external_ids,content_ratings,watch/providers`;
+
+  const detail = await fetchTMDB(endpoint);
+
+  // Genres
+  item.genres = (detail.genres || []).map(g => g.name);
+
+  // Duration / seasons + IMDB ID
+  if (item.type === "movie") {
+    item.duration_minutes = detail.runtime || null;
+    // For movies, imdb_id is top-level; also in external_ids
+    item.imdb_id = detail.imdb_id || detail.external_ids?.imdb_id || "";
+  } else {
+    item.seasons = detail.number_of_seasons || null;
+    item.imdb_id = detail.external_ids?.imdb_id || "";
+  }
+
+  // OMDB ID is the same as IMDB ID (tt-prefixed)
+  // If IMDB ID not on main detail, fetch external_ids separately
+  if (!item.imdb_id && item.tmdb_id) {
+    const extEndpoint = item.type === "movie"
+      ? `/movie/${item.tmdb_id}/external_ids`
+      : `/tv/${item.tmdb_id}/external_ids`;
+    const extIds = await fetchTMDB(extEndpoint);
+    item.imdb_id = extIds.imdb_id || "";
+  }
+
+  // Credits
+  const cast = (detail.credits?.cast || []).slice(0, 6).map(c => c.name);
+  item.cast = cast;
+  if (item.type === "movie") {
+    const director = (detail.credits?.crew || []).find(c => c.job === "Director");
+    item.director = director?.name || "";
+  } else {
+    const creator = (detail.created_by || [])[0];
+    item.director = creator?.name || "";
+  }
+
+  const ageRating = item.type === "movie"
+    ? getMovieCertification(detail.release_dates?.results || [])
+    : getTvCertification(detail.content_ratings?.results || []);
+  item.content_rating = ageRating.content_rating;
+  item.age_rating_country = ageRating.age_rating_country;
+
+  // Trailer from trusted TMDB metadata, preferring official and embeddable YouTube videos.
+  const trailer = await pickOfficialTrailer(detail.videos?.results || []);
+  item.trailer_url = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : "";
+
+  const collection = detectCollection(item.title, detail);
+  item.collection_name = collection.collection_name;
+  item.collection_key = collection.collection_key;
+  item.related_keywords = collection.related_keywords;
+
+  item.streaming_platforms = getWatchProviders(detail);
+  item.watch_provider_region = 'AU';
+
+  // Language
+  item.language = detail.original_language || item.language || "en";
+  item.original_language = detail.original_language || item.language || "en";
+  item.is_english_source = item.language === 'en' || item.original_language === 'en';
+
+  return item;
+}
+
+Deno.serve(async (req) => {
+  const { query = '', pages = 25, limit = 100, mode = 'search', searchType = 'title', genres = [], year = '', type = '', includeProfile = false } = await req.json();
+  const selectedGenres = Array.isArray(genres) ? genres : [genres].filter(Boolean);
+  const isPopularMode = mode === 'popular';
+  const isActorMode = mode === 'actor' || searchType === 'actor';
+  if (!query && !isPopularMode) return Response.json({ results: [] });
+
+  if (query && isActorMode) {
+    const actorSearch = await searchActorCredits(query, limit, includeProfile);
+    if (includeProfile) return Response.json({ ...actorSearch, actor_search: true });
+    return Response.json({ results: actorSearch, actor_search: true });
+  }
+
+  const searchPages = Array.from({ length: Math.max(1, Math.min(Number(pages) || 25, 25)) }, (_, index) => index + 1);
+
+  if (isPopularMode) {
+    const buildDiscoverPath = (mediaKind, page) => {
+      const params = new URLSearchParams({
+        sort_by: 'popularity.desc',
+        include_adult: 'false',
+        include_video: 'false',
+        with_original_language: 'en',
+        watch_region: 'AU',
+        page: String(page),
+        'vote_count.gte': '25'
+      });
+      const genreIds = selectedGenres.map(genre => GENRE_IDS[genre]?.[mediaKind]).filter(Boolean);
+      if (genreIds.length) params.set('with_genres', genreIds.join(','));
+      if (year) params.set(mediaKind === 'movie' ? 'primary_release_year' : 'first_air_date_year', String(year));
+      return `/discover/${mediaKind}?${params.toString()}`;
+    };
+
+    const [moviePages, tvPages] = await Promise.all([
+      type !== 'tv_show' ? Promise.all(searchPages.slice(0, 5).map(page => fetchTMDB(buildDiscoverPath('movie', page)))) : Promise.resolve([]),
+      type !== 'movie' ? Promise.all(searchPages.slice(0, 5).map(page => fetchTMDB(buildDiscoverPath('tv', page)))) : Promise.resolve([])
+    ]);
+
+    const combined = [
+      ...moviePages.flatMap(page => page.results || []).map(mapMovie),
+      ...tvPages.flatMap(page => page.results || []).map(mapTV)
+    ]
+      .filter((item, index, arr) => item.title && arr.findIndex(other => other.title?.toLowerCase() === item.title.toLowerCase() && other.type === item.type) === index)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      .slice(0, Math.max(10, Math.min(Number(limit) || 100, 100)));
+
+    const enriched = await Promise.all(combined.map(item => enrichWithDetails(item)));
+    return Response.json({ results: enriched });
+  }
+
+  // Search movies + TV across multiple TMDB pages, plus TVMaze as a TV-show backup.
+  const providerMatch = detectProviderQuery(query);
+  const providerId = providerMatch?.[1];
+  const [moviePages, tvPages, providerMoviePages, providerTvPages, tvMazeRes] = await Promise.all([
+    Promise.all(searchPages.map(page => fetchTMDB(`/search/movie?query=${encodeURIComponent(query)}&page=${page}&include_adult=false&language=en-US&region=AU`))),
+    Promise.all(searchPages.map(page => fetchTMDB(`/search/tv?query=${encodeURIComponent(query)}&page=${page}&include_adult=false&language=en-US`))),
+    providerId ? Promise.all(searchPages.slice(0, 5).map(page => fetchTMDB(`/discover/movie?watch_region=AU&with_watch_providers=${providerId}&with_original_language=en&include_adult=false&page=${page}`))) : Promise.resolve([]),
+    providerId ? Promise.all(searchPages.slice(0, 5).map(page => fetchTMDB(`/discover/tv?watch_region=AU&with_watch_providers=${providerId}&with_original_language=en&include_adult=false&page=${page}`))) : Promise.resolve([]),
+    fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`).then(res => res.json()).catch(() => [])
+  ]);
+
+  const movies = [...moviePages, ...providerMoviePages].flatMap(page => page.results || []).map(mapMovie);
+  const tv = [...tvPages, ...providerTvPages].flatMap(page => page.results || []).map(mapTV);
+  const tvMaze = (tvMazeRes || []).slice(0, 10).map(mapTVMaze);
+
+  const combined = [...movies, ...tv, ...tvMaze]
+    .filter((item, index, arr) => item.title && arr.findIndex(other => other.title?.toLowerCase() === item.title.toLowerCase() && other.type === item.type) === index)
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, Math.max(10, Math.min(Number(limit) || 100, 100)));
+
+  // Enrich TMDB results with details; keep TVMaze backup results as-is.
+  const enriched = await Promise.all(combined.map(item => item.tmdb_id ? enrichWithDetails(item) : item));
+
+  return Response.json({ results: enriched });
+});
