@@ -1,0 +1,46 @@
+{
+  "name": "WatchHistory",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "media_id": {
+      "type": "string"
+    },
+    "media_title": {
+      "type": "string"
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "poster_url": {
+      "type": "string"
+    },
+    "progress_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "duration_seconds": {
+      "type": "number"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "season": {
+      "type": "number"
+    },
+    "episode": {
+      "type": "number"
+    },
+    "last_watched": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email",
+    "media_id"
+  ]
+}

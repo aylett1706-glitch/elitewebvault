@@ -1,0 +1,69 @@
+{
+  "name": "Actor",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "biography": {
+      "type": "string"
+    },
+    "career_summary": {
+      "type": "string"
+    },
+    "acting_style": {
+      "type": "string"
+    },
+    "industry_impact": {
+      "type": "string"
+    },
+    "profile_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "known_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "top_genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "birth_date": {
+      "type": "string"
+    },
+    "birth_place": {
+      "type": "string"
+    },
+    "popularity": {
+      "type": "number",
+      "default": 0
+    },
+    "total_movies": {
+      "type": "number",
+      "default": 0
+    },
+    "total_tv_shows": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "catalogued",
+        "watching",
+        "archived"
+      ],
+      "default": "catalogued"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

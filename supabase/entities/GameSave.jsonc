@@ -1,0 +1,32 @@
+{
+  "name": "GameSave",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_title": {
+      "type": "string"
+    },
+    "save_label": {
+      "type": "string"
+    },
+    "save_notes": {
+      "type": "string"
+    },
+    "save_data": {
+      "type": "string"
+    },
+    "last_played": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email",
+    "game_id"
+  ]
+}

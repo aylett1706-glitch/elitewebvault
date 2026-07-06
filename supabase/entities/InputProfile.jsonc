@@ -1,0 +1,87 @@
+{
+  "name": "InputProfile",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "controller",
+        "keyboard_mouse",
+        "touch",
+        "wheel",
+        "hotas",
+        "fight_stick",
+        "adaptive",
+        "motion"
+      ],
+      "default": "controller"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_title": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "fps",
+        "driving",
+        "rpg",
+        "accessibility",
+        "streaming",
+        "training",
+        "custom"
+      ],
+      "default": "custom"
+    },
+    "binds": {
+      "type": "object"
+    },
+    "macros": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "sensitivity": {
+      "type": "object"
+    },
+    "touch_layout": {
+      "type": "object"
+    },
+    "gyro_settings": {
+      "type": "object"
+    },
+    "haptics": {
+      "type": "object"
+    },
+    "rgb_profile": {
+      "type": "object"
+    },
+    "accessibility": {
+      "type": "object"
+    },
+    "streamer_actions": {
+      "type": "object"
+    },
+    "is_shared": {
+      "type": "boolean",
+      "default": false
+    },
+    "rating": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_email",
+    "name"
+  ]
+}

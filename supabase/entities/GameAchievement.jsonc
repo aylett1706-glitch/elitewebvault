@@ -1,0 +1,36 @@
+{
+  "name": "GameAchievement",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_title": {
+      "type": "string"
+    },
+    "achievement_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rarity_percent": {
+      "type": "number"
+    },
+    "points": {
+      "type": "number",
+      "default": 0
+    },
+    "unlocked_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email",
+    "achievement_name"
+  ]
+}

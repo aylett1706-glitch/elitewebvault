@@ -1,0 +1,54 @@
+{
+  "name": "WallpaperTheme",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "official",
+        "community",
+        "ai_generated",
+        "uploaded"
+      ],
+      "default": "community"
+    },
+    "preview_url": {
+      "type": "string"
+    },
+    "video_url": {
+      "type": "string"
+    },
+    "theme_preset": {
+      "type": "string"
+    },
+    "effects": {
+      "type": "object"
+    },
+    "rating": {
+      "type": "number",
+      "default": 0
+    },
+    "downloads": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending",
+        "rejected"
+      ],
+      "default": "approved"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

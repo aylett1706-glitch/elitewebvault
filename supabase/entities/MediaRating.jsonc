@@ -1,0 +1,29 @@
+{
+  "name": "MediaRating",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "media_id": {
+      "type": "string"
+    },
+    "media_title": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "watched": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_email",
+    "media_id",
+    "rating"
+  ]
+}

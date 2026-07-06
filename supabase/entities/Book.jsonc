@@ -1,0 +1,154 @@
+{
+  "name": "Book",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "cover_url": {
+      "type": "string"
+    },
+    "preview_url": {
+      "type": "string"
+    },
+    "info_url": {
+      "type": "string"
+    },
+    "source_id": {
+      "type": "string"
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "published_date": {
+      "type": "string"
+    },
+    "page_count": {
+      "type": "number"
+    },
+    "language": {
+      "type": "string"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "character_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "ebook",
+        "pdf",
+        "comic",
+        "manga",
+        "magazine",
+        "manual",
+        "educational",
+        "light_novel",
+        "interactive",
+        "audiobook"
+      ],
+      "default": "ebook"
+    },
+    "reading_mode": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "dark",
+        "sepia",
+        "dyslexia",
+        "immersive"
+      ],
+      "default": "standard"
+    },
+    "progress_percent": {
+      "type": "number",
+      "default": 0
+    },
+    "bookmarks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "quotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "has_audiobook": {
+      "type": "boolean",
+      "default": false
+    },
+    "audiobook_url": {
+      "type": "string"
+    },
+    "transcript_url": {
+      "type": "string"
+    },
+    "xp_value": {
+      "type": "number",
+      "default": 10
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending",
+        "rejected"
+      ],
+      "default": "approved"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

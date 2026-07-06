@@ -1,0 +1,103 @@
+{
+  "name": "Game",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "cover_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "web_game",
+        "cloud_link",
+        "app_store",
+        "emulator",
+        "steam",
+        "xbox_cloud",
+        "playstation_cloud"
+      ],
+      "default": "web_game"
+    },
+    "play_url": {
+      "type": "string"
+    },
+    "store_url": {
+      "type": "string"
+    },
+    "emulator_core": {
+      "type": "string"
+    },
+    "rom_url": {
+      "type": "string"
+    },
+    "rom_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "legal_notes": {
+      "type": "string"
+    },
+    "age_rating": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending",
+        "rejected"
+      ],
+      "default": "approved"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title",
+    "source_type"
+  ]
+}

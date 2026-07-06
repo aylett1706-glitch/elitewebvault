@@ -1,0 +1,88 @@
+{
+  "name": "Manga",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "synopsis": {
+      "type": "string"
+    },
+    "cover_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "artist": {
+      "type": "string"
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ongoing",
+        "completed",
+        "hiatus"
+      ],
+      "default": "ongoing"
+    },
+    "content_rating": {
+      "type": "string"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "source_url": {
+      "type": "string",
+      "description": "Official or informational manga source page"
+    },
+    "read_url": {
+      "type": "string",
+      "description": "Official readable manga URL, if available"
+    },
+    "read_source_label": {
+      "type": "string",
+      "description": "Display name for the official reading source"
+    },
+    "chapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chapter": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

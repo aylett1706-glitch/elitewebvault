@@ -1,0 +1,53 @@
+{
+  "name": "LiveChannel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "default": "General"
+    },
+    "country": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "stream_url": {
+      "type": "string"
+    },
+    "embed_url": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "stream",
+        "embed",
+        "m3u"
+      ],
+      "default": "stream"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending",
+        "rejected"
+      ],
+      "default": "approved"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

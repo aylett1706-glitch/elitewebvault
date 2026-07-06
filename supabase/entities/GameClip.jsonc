@@ -1,0 +1,45 @@
+{
+  "name": "GameClip",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_title": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "clip_url": {
+      "type": "string"
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "duration_seconds": {
+      "type": "number"
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ai_highlight": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "user_email",
+    "title"
+  ]
+}

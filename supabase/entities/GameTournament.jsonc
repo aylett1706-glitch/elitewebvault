@@ -1,0 +1,52 @@
+{
+  "name": "GameTournament",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "game_title": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "solo",
+        "duo",
+        "team"
+      ],
+      "default": "solo"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "live",
+        "completed"
+      ],
+      "default": "upcoming"
+    },
+    "region": {
+      "type": "string"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "prize": {
+      "type": "string"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "name": "Media",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "movie",
+        "tv_show"
+      ]
+    },
+    "synopsis": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "rating": {
+      "type": "number"
+    },
+    "imdb_rating": {
+      "type": "number"
+    },
+    "content_rating": {
+      "type": "string",
+      "description": "Official age/content classification, preferably AU then US fallback"
+    },
+    "age_rating_country": {
+      "type": "string",
+      "description": "Country/source used for the content rating, e.g. AU or US"
+    },
+    "user_rating_average": {
+      "type": "number",
+      "default": 0
+    },
+    "user_rating_count": {
+      "type": "number",
+      "default": 0
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cast": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "director": {
+      "type": "string"
+    },
+    "poster_url": {
+      "type": "string"
+    },
+    "backdrop_url": {
+      "type": "string"
+    },
+    "gallery_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "video_url": {
+      "type": "string"
+    },
+    "trailer_url": {
+      "type": "string"
+    },
+    "subtitle_url": {
+      "type": "string",
+      "description": "Default subtitle/caption file URL, such as VTT"
+    },
+    "subtitles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "default": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "duration_minutes": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "approved"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_trending": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_adult": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_kids": {
+      "type": "boolean",
+      "default": false
+    },
+    "kids_age_group": {
+      "type": "string",
+      "enum": [
+        "All Ages",
+        "3+",
+        "7+",
+        "10+",
+        "13+"
+      ],
+      "default": "All Ages"
+    },
+    "collection_name": {
+      "type": "string"
+    },
+    "collection_key": {
+      "type": "string"
+    },
+    "related_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "streaming_platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Streaming platforms where this title is available, such as Netflix, Prime Video, Disney+, Stan, Binge, Apple TV+"
+    },
+    "watch_provider_region": {
+      "type": "string",
+      "default": "AU"
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    },
+    "tmdb_id": {
+      "type": "string"
+    },
+    "imdb_id": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string",
+      "default": "en"
+    },
+    "content_notes": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "seasons": {
+      "type": "number"
+    },
+    "episodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "season": {
+            "type": "number"
+          },
+          "episode": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "video_url": {
+            "type": "string"
+          },
+          "poster_url": {
+            "type": "string"
+          },
+          "subtitle_url": {
+            "type": "string"
+          },
+          "subtitles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "default": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            }
+          },
+          "duration_minutes": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}

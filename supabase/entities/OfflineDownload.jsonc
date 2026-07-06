@@ -1,0 +1,42 @@
+{
+  "name": "OfflineDownload",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "item_title": {
+      "type": "string"
+    },
+    "item_type": {
+      "type": "string"
+    },
+    "poster_url": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "saved",
+        "ready",
+        "removed"
+      ],
+      "default": "saved"
+    },
+    "saved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email",
+    "item_id",
+    "item_title"
+  ]
+}

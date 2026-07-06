@@ -1,0 +1,15 @@
+{
+  "name": "EliteSettings",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "settings": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "key"
+  ]
+}

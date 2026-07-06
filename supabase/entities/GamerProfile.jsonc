@@ -1,0 +1,56 @@
+{
+  "name": "GamerProfile",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "gamer_tag": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "badges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "favorite_games": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "play_style": {
+      "type": "string",
+      "enum": [
+        "casual",
+        "hardcore",
+        "story_focused",
+        "family_friendly",
+        "co_op",
+        "competitive"
+      ],
+      "default": "casual"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

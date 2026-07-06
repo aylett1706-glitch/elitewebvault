@@ -1,0 +1,47 @@
+{
+  "name": "KidsProfile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "guardian_email": {
+      "type": "string"
+    },
+    "age_group": {
+      "type": "string",
+      "enum": [
+        "All Ages",
+        "3+",
+        "7+",
+        "10+",
+        "13+"
+      ],
+      "default": "All Ages"
+    },
+    "allowed_genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "daily_limit_minutes": {
+      "type": "number",
+      "default": 60
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "guardian_email"
+  ]
+}

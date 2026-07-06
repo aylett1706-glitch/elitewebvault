@@ -1,0 +1,128 @@
+{
+  "name": "Performer",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "stage_name": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "cover_url": {
+      "type": "string"
+    },
+    "gallery_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bio": {
+      "type": "string"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "height": {
+      "type": "string"
+    },
+    "measurements": {
+      "type": "string"
+    },
+    "nationality": {
+      "type": "string"
+    },
+    "country_code": {
+      "type": "string"
+    },
+    "hair_color": {
+      "type": "string"
+    },
+    "eye_color": {
+      "type": "string"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "Female",
+        "Male",
+        "Trans",
+        "Non-binary",
+        "Other"
+      ]
+    },
+    "total_scenes": {
+      "type": "number",
+      "default": 0
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "character_traits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "character_style": {
+      "type": "string"
+    },
+    "bundle_name": {
+      "type": "string"
+    },
+    "bundle_description": {
+      "type": "string"
+    },
+    "social_links": {
+      "type": "object"
+    },
+    "profile_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "video_examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "video_url": {
+            "type": "string"
+          },
+          "poster_url": {
+            "type": "string"
+          },
+          "preview_gif_url": {
+            "type": "string"
+          },
+          "quality": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "MediaCollection",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "collection_type": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto",
+        "mixed"
+      ],
+      "default": "mixed"
+    },
+    "media_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "game_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "selected_media_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "selected_game_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cover_url": {
+      "type": "string"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
