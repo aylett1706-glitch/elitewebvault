@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import Navbar from '@/components/layout/Navbar';
 import { Check, Database, Film, Loader2, Plus, Search, Sparkles, Star, Tv } from 'lucide-react';
 import HubCategoryChips from '@/components/hubs/HubCategoryChips';

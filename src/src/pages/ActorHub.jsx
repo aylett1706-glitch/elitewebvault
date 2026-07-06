@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import Navbar from '@/components/layout/Navbar';
 import ActorSearchHero from '@/components/actors/ActorSearchHero';
 import ActorProfileHero from '@/components/actors/ActorProfileHero';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { ArrowLeft, Play, Star, Clock, Film, Trash2, ChevronDown, Sparkles } from 'lucide-react';
 import TVSeriesSearchModal from '@/components/media/TVSeriesSearchModal';
 import TVEpisodeManager from '@/components/admin/TVEpisodeManager';

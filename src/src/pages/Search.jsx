@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Search, Film, Loader2, Database, Plus, Check, ArrowLeft, Lock, Eye, EyeOff, ShieldAlert, Sparkles, ChevronDown, ChevronUp, X, Image, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { ArrowLeft, ExternalLink, Gamepad2, Maximize, RotateCcw, Save, ShieldCheck, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 import EmulatorJsPlayer from '@/components/games/EmulatorJsPlayer';

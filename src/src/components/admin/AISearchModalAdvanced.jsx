@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { X, Search, Loader2, Plus, Check, Film, Star, SlidersHorizontal, ChevronDown, Image, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';

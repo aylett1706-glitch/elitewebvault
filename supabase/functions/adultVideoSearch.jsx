@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK with lightweight shims: Supabase auth + Ollama LLM
 
 const CATEGORIES = [
   'Trending', 'Featured', 'New Releases', 'Most Viewed', 'Amateur', 'Professional', 'Couples',
@@ -41,8 +41,39 @@ const isSafeAdultResult = (item) => {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const { query, category, page, fast } = await req.json();
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const OLLAMA_URL = Deno.env.get('OLLAMA_URL') || '';
+
+    const getUserFromHeader = async (headers) => {
+      try {
+        const auth = headers.get('authorization') || '';
+        if (!auth) return null;
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const invokeLLM = async (opts = {}) => {
+      if (!OLLAMA_URL) throw new Error('OLLAMA_URL not configured');
+      const body = {
+        model: opts.model || 'llama2',
+        messages: [{ role: 'user', content: opts.prompt }],
+        max_tokens: opts.max_tokens || 2000
+      };
+      const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return res.json();
+    };
+
+    const baseReq = await req.json();
+    const { query, category, page, fast } = baseReq;
 
     const cleanQuery = String(query || '').trim();
     const cleanCategory = String(category || '').trim();
@@ -86,35 +117,26 @@ Allowed category suggestions: ${CATEGORIES.join(', ')}
 
 Return up to ${fast ? 8 : 24} real playable results from popular sites. Prioritise results with direct poster_url thumbnails. For page numbers above 1, return different results than earlier pages.`;
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    const raw = await invokeLLM({
       prompt,
       add_context_from_internet: true,
-      model: 'gemini_3_flash',
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          results: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                synopsis: { type: 'string' },
-                category: { type: 'string' },
-                categories: { type: 'array', items: { type: 'string' } },
-                source_url: { type: 'string' },
-                video_url: { type: 'string' },
-                poster_url: { type: 'string' },
-                preview_gif_url: { type: 'string' },
-                gif_url: { type: 'string' }
-              }
-            }
-          }
-        }
-      }
+      model: 'ollama',
+      max_tokens: 2000
     });
 
-    const results = Array.isArray(result?.results) ? result.results : [];
+    // Try to parse JSON from model output (depends on model prompt compliance)
+    let results = [];
+    try {
+      if (raw?.choices && Array.isArray(raw.choices) && raw.choices[0]?.message?.content) {
+        const txt = raw.choices[0].message.content;
+        const parsed = JSON.parse(txt);
+        results = Array.isArray(parsed.results) ? parsed.results : parsed.results || [];
+      } else if (raw?.results) {
+        results = Array.isArray(raw.results) ? raw.results : [];
+      }
+    } catch (e) {
+      results = [];
+    }
     const safeResults = results.filter(isSafeAdultResult);
     return Response.json({ results: safeResults, page: cleanPage, has_more: safeResults.length > 0 });
   } catch (error) {

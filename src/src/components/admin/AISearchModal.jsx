@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
+const base44 = supabaseApi;
 import { X, Search, Loader2, Plus, Check, Film, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -17,14 +18,14 @@ export default function AISearchModal({ onClose, onAdded }) {
     if (!query.trim()) return;
     setLoading(true);
     setResults([]);
-    const res = await base44.functions.invoke('tmdbSearch', { query: query.trim(), searchType });
+    const res = await supabaseApi.functions.invoke('tmdbSearch', { query: query.trim(), searchType });
     setResults(res.data?.results || []);
     setLoading(false);
   };
 
   const addToLibrary = async (item) => {
     setAdding(prev => new Set([...prev, item.title]));
-    await base44.entities.Media.create({
+    await supabaseApi.entities.Media.create({
       title: item.title,
       type: item.type,
       synopsis: item.synopsis,

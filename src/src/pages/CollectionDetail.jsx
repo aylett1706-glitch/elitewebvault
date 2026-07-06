@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import Navbar from '@/components/layout/Navbar';
 import CollectionItemCard from '@/components/collections/CollectionItemCard';
 import { ArrowLeft, Gamepad2, Loader2, Search, Trash2 } from 'lucide-react';

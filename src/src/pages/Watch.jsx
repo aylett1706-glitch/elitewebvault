@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import ExternalPlayer from '@/components/player/ExternalPlayer';
 import VideoJSPlayer from '@/components/player/VideoJSPlayer';
 import MoreLikeThis from '@/components/player/MoreLikeThis';

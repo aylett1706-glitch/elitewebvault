@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Edit3, Film, Loader2, Lock, Play, Plus, UserRound } from 'lucide-react';
 import { toast } from 'sonner';

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import Navbar from '@/components/layout/Navbar';
 import SportsHero from '@/components/sports/SportsHero';
 import SportsCategoryGrid from '@/components/sports/SportsCategoryGrid';

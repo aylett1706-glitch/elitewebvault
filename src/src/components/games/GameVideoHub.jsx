@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Clapperboard, Loader2, Search, Sparkles } from 'lucide-react';
 import HubCategoryChips from '@/components/hubs/HubCategoryChips';
 import HubContentRow from '@/components/hubs/HubContentRow';

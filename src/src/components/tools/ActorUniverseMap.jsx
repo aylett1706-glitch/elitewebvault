@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Network, UserRound } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 
 export default function ActorUniverseMap() {
   const [media, setMedia] = useState([]);

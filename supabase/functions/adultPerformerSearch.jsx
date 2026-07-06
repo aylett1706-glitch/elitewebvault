@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK with Supabase auth + Ollama LLM shims
 
 const PROHIBITED_TERMS = [
   'minor', 'minors', 'child', 'children', 'kid', 'kids', 'underage', 'under age',
@@ -36,8 +36,38 @@ async function normalizePerformerImages(item) {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const OLLAMA_URL = Deno.env.get('OLLAMA_URL') || '';
+
+    const getUserFromHeader = async (headers) => {
+      try {
+        const auth = headers.get('authorization') || '';
+        if (!auth) return null;
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const invokeLLM = async (opts = {}) => {
+      if (!OLLAMA_URL) throw new Error('OLLAMA_URL not configured');
+      const body = {
+        model: opts.model || 'llama2',
+        messages: [{ role: 'user', content: opts.prompt }],
+        max_tokens: opts.max_tokens || 2000
+      };
+      const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return res.json();
+    };
+
+    const user = await getUserFromHeader(req.headers);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const { query, performer, page } = await req.json();
 
@@ -87,56 +117,18 @@ Search query: ${cleanQuery || 'popular adult actresses performers'}
 Page number: ${cleanPage}
 Return up to 18 performer cards. For page numbers above 1, return different performers.`;
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt,
-      add_context_from_internet: true,
-      model: 'gemini_3_flash',
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          performer: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              bio: { type: 'string' },
-              portrait_url: { type: 'string' },
-              cover_url: { type: 'string' },
-              profile_url: { type: 'string' },
-              categories: { type: 'array', items: { type: 'string' } }
-            }
-          },
-          performers: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                bio: { type: 'string' },
-                portrait_url: { type: 'string' },
-                cover_url: { type: 'string' },
-                profile_url: { type: 'string' },
-                categories: { type: 'array', items: { type: 'string' } }
-              }
-            }
-          },
-          videos: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                synopsis: { type: 'string' },
-                year: { type: 'number' },
-                poster_url: { type: 'string' },
-                source_url: { type: 'string' },
-                video_url: { type: 'string' },
-                categories: { type: 'array', items: { type: 'string' } }
-              }
-            }
-          }
-        }
+    const raw = await invokeLLM({ prompt, model: 'ollama', max_tokens: 2000 });
+    let result = {};
+    try {
+      if (raw?.choices && Array.isArray(raw.choices) && raw.choices[0]?.message?.content) {
+        const txt = raw.choices[0].message.content;
+        result = JSON.parse(txt);
+      } else if (raw?.performer || raw?.performers || raw?.videos) {
+        result = raw;
       }
-    });
+    } catch (e) {
+      result = {};
+    }
 
     const rawPerformers = (Array.isArray(result?.performers) ? result.performers : [])
       .filter(item => isSafeText([item?.name, item?.bio, ...(item?.categories || [])]));

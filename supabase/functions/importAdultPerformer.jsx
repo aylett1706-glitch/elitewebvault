@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK with Supabase auth + Ollama + Supabase REST DB operations
 
 const PROHIBITED_TERMS = [
   'minor', 'minors', 'child', 'children', 'kid', 'kids', 'underage', 'under age',
@@ -26,8 +26,50 @@ async function getWorkingImageUrl(...urls) {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const OLLAMA_URL = Deno.env.get('OLLAMA_URL') || '';
+
+    const getUserFromHeader = async (headers) => {
+      try {
+        const auth = headers.get('authorization') || '';
+        if (!auth) return null;
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) { return null }
+    };
+
+    const invokeLLM = async (opts = {}) => {
+      if (!OLLAMA_URL) throw new Error('OLLAMA_URL not configured');
+      const body = { model: opts.model || 'llama2', messages: [{ role: 'user', content: opts.prompt }], max_tokens: opts.max_tokens || 2000 };
+      const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      return res.json();
+    };
+
+    const supabaseFilter = async (table, match = {}) => {
+      const params = Object.entries(match).map(([k, v]) => `${k}=eq.${encodeURIComponent(String(v))}`).join('&');
+      const url = `${SUPABASE_URL}/rest/v1/${table}${params ? `?${params}` : '?select=*'}`;
+      const resp = await fetch(url, { headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+      if (!resp.ok) return [];
+      return await resp.json();
+    };
+
+    const supabaseInsert = async (table, obj) => {
+      const url = `${SUPABASE_URL}/rest/v1/${table}`;
+      const resp = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, apikey: SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify([obj]) });
+      if (!resp.ok) throw new Error('Supabase insert failed');
+      return await resp.json();
+    };
+
+    const supabaseUpdateById = async (table, id, obj) => {
+      const url = `${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`;
+      const resp = await fetch(url, { method: 'PATCH', headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, apikey: SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify(obj) });
+      if (!resp.ok) throw new Error('Supabase update failed');
+      return await resp.json();
+    };
+
+    const user = await getUserFromHeader(req.headers);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { query } = await req.json();
@@ -38,10 +80,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Blocked: underage or age-ambiguous searches are prohibited.' }, { status: 400 });
     }
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: 'gemini_3_flash',
-      add_context_from_internet: true,
-      prompt: `Research this public adult performer or official profile URL: ${cleanQuery}
+    const raw = await invokeLLM({ model: 'ollama', add_context_from_internet: true, prompt: `Research this public adult performer or official profile URL: ${cleanQuery}
 
 Return clean structured data for a private catalogue.
 Rules:
@@ -89,6 +128,12 @@ Return one performer profile and up to 12 high-quality video examples.`,
       }
     });
 
+    let result = {};
+    try {
+      if (raw?.choices && raw.choices[0]?.message?.content) result = JSON.parse(raw.choices[0].message.content);
+      else result = raw;
+    } catch (e) { result = raw || {} }
+
     if (!isSafeText([result?.name, result?.stage_name, result?.bio, ...(result?.tags || [])])) {
       return Response.json({ error: 'Blocked: unsafe or age-ambiguous result.' }, { status: 400 });
     }
@@ -97,7 +142,7 @@ Return one performer profile and up to 12 high-quality video examples.`,
     const coverUrl = await getWorkingImageUrl(result?.cover_url, result?.photo_url);
     const videos = (result?.video_examples || []).filter(video => isSafeText([video?.title, video?.quality]));
 
-    const existing = await base44.entities.Performer.filter({ name: result?.name || result?.stage_name || cleanQuery }, '-updated_date', 1);
+    const existing = await supabaseFilter('Performer', { name: result?.name || result?.stage_name || cleanQuery });
     const payload = {
       name: result?.name || result?.stage_name || cleanQuery,
       stage_name: result?.stage_name || result?.name || cleanQuery,
@@ -118,8 +163,8 @@ Return one performer profile and up to 12 high-quality video examples.`,
     };
 
     const performer = existing?.[0]?.id
-      ? await base44.entities.Performer.update(existing[0].id, payload)
-      : await base44.entities.Performer.create(payload);
+      ? await supabaseUpdateById('Performer', existing[0].id, payload)
+      : await supabaseInsert('Performer', payload);
 
     return Response.json({ performer });
   } catch (error) {

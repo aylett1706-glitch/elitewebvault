@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Copy, Share2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { toast } from 'sonner';
 
 export default function SeoShareCardGenerator() {

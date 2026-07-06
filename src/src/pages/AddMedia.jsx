@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';

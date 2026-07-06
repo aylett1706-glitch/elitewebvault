@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK: use Supabase auth and optional Storage upload
 
 const extractImageUrl = (input) => {
   const value = String(input || '').trim().replace(/["'\\]/g, '');
@@ -15,8 +15,21 @@ const extractImageUrl = (input) => {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const SUPABASE_STORAGE_BUCKET = Deno.env.get('SUPABASE_STORAGE_BUCKET') || '';
+
+    const getUserFromHeader = async (headers) => {
+      try {
+        const auth = headers.get('authorization') || '';
+        if (!auth) return null;
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) { return null }
+    };
+
+    const user = await getUserFromHeader(req.headers);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { url } = await req.json();
@@ -45,9 +58,17 @@ Deno.serve(async (req) => {
     const extension = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
     const blob = await response.blob();
     const file = new File([blob], `imported-image-${Date.now()}.${extension}`, { type: contentType });
-    const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    // If a storage bucket is configured, upload to Supabase Storage; otherwise return original URL
+    if (SUPABASE_STORAGE_BUCKET) {
+      const path = `imports/imported-image-${Date.now()}.${extension}`;
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${path}`;
+      const uploadResp = await fetch(uploadUrl, { method: 'PUT', headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, apikey: SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': contentType }, body: await blob.arrayBuffer() });
+      if (!uploadResp.ok) return Response.json({ error: 'Upload failed' }, { status: 500 });
+      const publicUrl = `${SUPABASE_URL.replace(/\.supabase\.co$/, '.supabase.co')}/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/${path}`;
+      return Response.json({ file_url: publicUrl });
+    }
 
-    return Response.json({ file_url: uploaded.file_url });
+    return Response.json({ file_url: imageUrl });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

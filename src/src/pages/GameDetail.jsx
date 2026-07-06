@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import Navbar from '@/components/layout/Navbar';
 import { ArrowLeft, ExternalLink, Gamepad2, MonitorPlay, ShieldCheck, Star } from 'lucide-react';
 import { toast } from 'sonner';

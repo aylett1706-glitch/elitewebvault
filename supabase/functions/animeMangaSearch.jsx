@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK with Supabase auth shim
 
 const JIKAN_BASE = 'https://api.jikan.moe/v4';
 
@@ -77,8 +77,22 @@ function normalizeManga(item) {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+    const getUserFromHeader = async (headers) => {
+      try {
+        const auth = headers.get('authorization') || '';
+        if (!auth) return null;
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const user = await getUserFromHeader(req.headers);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { query, type = 'anime', deep = false, limit = 12, status = '', rating = '' } = await req.json();

@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 
 export const ELITE_STORAGE_KEY = 'ev_elite_settings_v1';
 export const GLOBAL_SETTINGS_KEY = 'global';

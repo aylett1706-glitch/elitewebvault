@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Clipboard, Copy, Crop, Download, Image, Link2, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { toDisplayImageUrl } from '@/components/vault/imageUrl';

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Image, Link2, Loader2, Plus, Save, Trash2, Upload, Video, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageSourceField from '@/components/media/ImageSourceField';

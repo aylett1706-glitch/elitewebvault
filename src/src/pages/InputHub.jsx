@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { toast } from 'sonner';
 import Navbar from '@/components/layout/Navbar';
 import InputDevicePanel from '@/components/input-hub/InputDevicePanel';

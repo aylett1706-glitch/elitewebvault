@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bot, Film, Gamepad2, Loader2, MessageCircle, Send, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 
 export default function EliteAIAssistant() {
   const [open, setOpen] = useState(false);

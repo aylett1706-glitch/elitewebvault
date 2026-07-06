@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Upload, Shield, Menu, X, Play, Lock, Baby, Gamepad2, Tv, BookOpen, Radio, Keyboard, Library, Folder, UserRound, Wrench, TrendingUp, Trophy } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar({ user }) {

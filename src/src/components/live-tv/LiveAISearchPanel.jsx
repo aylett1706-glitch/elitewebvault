@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Check, Loader2, Plus, Radio, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 

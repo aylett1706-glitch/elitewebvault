@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK with Supabase auth + Ollama LLM shim
 
 const cleanText = (value = '') => String(value).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 
@@ -191,11 +191,29 @@ const mapWebSourceBook = (item = {}, query = '') => {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const OLLAMA_URL = Deno.env.get('OLLAMA_URL') || '';
+
+    const getUserFromHeader = async (headers) => {
+      try {
+        const auth = headers.get('authorization') || '';
+        if (!auth) return null;
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) { return null }
+    };
+
+    const invokeLLM = async (opts = {}) => {
+      if (!OLLAMA_URL) throw new Error('OLLAMA_URL not configured');
+      const body = { model: opts.model || 'llama2', messages: [{ role: 'user', content: opts.prompt }], max_tokens: opts.max_tokens || 2000 };
+      const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      return res.json();
+    };
+
+    const user = await getUserFromHeader(req.headers);
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const payload = body?.payload || body?.data || body || {};
@@ -241,29 +259,12 @@ Deno.serve(async (req) => {
         sourceOptions.includes('audiobooks') ? 'LibriVox and other legal full audiobooks' : ''
       ].filter(Boolean).join('; ');
 
-      const aiDiscovery = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        add_context_from_internet: true,
-        prompt: `Search the whole web for legal, free, full-access readable sources for this query: "${search}". Focus on: ${sourceFocus || 'all legal public full-access sources'}. Only return sources that can be read or listened to in full immediately without preview limits, borrowing, login walls, omitted pages, piracy, torrents, lockers, or unauthorized copyrighted copies. Prefer direct HTML, TXT, EPUB, PDF, MP3, Project Gutenberg, Standard Ebooks, OpenStax, LibriVox, Wikisource, author/publisher free releases, university/open educational repositories, and other legitimate open-access sources. Exclude Internet Archive borrow-only or limited-preview pages.`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            sources: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string' },
-                  author: { type: 'string' },
-                  source: { type: 'string' },
-                  url: { type: 'string' },
-                  format: { type: 'string' },
-                  description: { type: 'string' }
-                }
-              }
-            }
-          }
-        }
-      });
+      const aiRaw = await invokeLLM({ prompt: `Search the whole web for legal, free, full-access readable sources for this query: "${search}". Focus on: ${sourceFocus || 'all legal public full-access sources'}. Only return JSON with a top-level "sources" array of objects with {title, author, source, url, format, description}. Exclude borrow-only or limited-preview pages.`, model: 'ollama', max_tokens: 2000 });
+      let aiDiscovery = {};
+      try {
+        if (aiRaw?.choices && aiRaw.choices[0]?.message?.content) aiDiscovery = JSON.parse(aiRaw.choices[0].message.content);
+        else aiDiscovery = aiRaw;
+      } catch (e) { aiDiscovery = {} }
 
       webResults = (aiDiscovery?.sources || [])
         .filter(item => item.url && /^https?:\/\//i.test(item.url) && isFullReadableUrl(item.url))

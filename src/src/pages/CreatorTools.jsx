@@ -12,7 +12,7 @@ import SeoShareCardGenerator from '@/components/tools/SeoShareCardGenerator';
 import ImprovementCommandCenter from '@/components/tools/improvements/ImprovementCommandCenter';
 import { Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 
 const TOOL_MODULES = [
   { id: 'watch-parties', label: 'Watch Parties', Component: WatchPartyManager },

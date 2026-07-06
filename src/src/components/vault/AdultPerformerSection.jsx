@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Link } from 'react-router-dom';
 import { Search, Loader2, UserRound, Sparkles } from 'lucide-react';
 import { toDisplayImageUrl } from './imageUrl';

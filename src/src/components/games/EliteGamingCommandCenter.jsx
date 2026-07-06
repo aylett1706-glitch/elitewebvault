@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Link } from 'react-router-dom';
 import { Brain, Gamepad2, Library, Cloud, Users, Radio, Trophy, Sparkles, Puzzle, ShieldCheck, Gauge, Smartphone, Store, Wand2, Accessibility, Loader2, Mic, MonitorPlay, Play, Plus, Video, ExternalLink, Keyboard, MousePointer2 } from 'lucide-react';
 

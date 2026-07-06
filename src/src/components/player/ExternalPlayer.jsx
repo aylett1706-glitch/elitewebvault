@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link2, X, Check, ChevronLeft, ChevronRight, RefreshCw, ArrowLeft, Home, Loader2, Maximize2, Minimize2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 

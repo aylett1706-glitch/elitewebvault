@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi, base44 } from '@/api/supabaseApi';
 import { Brain, Loader2, Sparkles } from 'lucide-react';
 
 export default function AiInputAssistant({ profile, setProfile }) {

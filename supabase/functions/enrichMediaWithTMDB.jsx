@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// Replaced Base44 SDK auth usage with Supabase auth shim
 
 const TMDB_TOKEN = Deno.env.get("TMDB_READ_ACCESS_TOKEN");
 const YOUTUBE_API_KEY = Deno.env.get("YOUTUBE_API_KEY");
@@ -90,8 +90,20 @@ function getWatchProviders(detail = {}) {
 }
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-  const user = await base44.auth.me();
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+  const getUserFromHeader = async (headers) => {
+    try {
+      const auth = headers.get('authorization') || '';
+      if (!auth) return null;
+      const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_SERVICE_ROLE_KEY } });
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (e) { return null }
+  };
+
+  const user = await getUserFromHeader(req.headers);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { title, type } = await req.json();
